@@ -1,0 +1,15 @@
+body {background-color: lightgreen;}
+.container {width: 60%; margin: 50px auto}
+label {font-weight: bold;}
+input[type='button'], input[type='reset'], input[type='submit'] {width: auto;}
+form:not(#formconsulta) {
+	background-color: lightblue;
+	padding: 20px;
+	border: 1px solid black;		
+	border-radius: 10px;
+	box-shadow: 5px 5px 3px green;
+}
+table {width: 400px;margin: auto}
+table, td, th {border: 1px solid blue}
+td {cursor: pointer;}
+tr:not(:first-child):hover {background-color: lightblue;}
