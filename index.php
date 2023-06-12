@@ -56,10 +56,18 @@ if (isset($_POST['alta'])) {
 		// limpiar datos de la sesión
 		session_unset();
 		session_destroy();
-
 	} catch (Exception $e) {
 		$errores .= $e->getMessage() . "<br>";
 	}
+}
+
+if (isset($_POST['limpiar'])) {
+	$_SESSION['nif'] = null;
+	$_SESSION['nombre'] = null;
+	$_SESSION['apellidos'] = null;
+	$_SESSION['direccion'] = null;
+	$_SESSION['telefono'] = null;
+	$_SESSION['email'] = null;
 }
 
 
@@ -72,6 +80,8 @@ if (isset($_POST['alta'])) {
 
 //CONSULTA DE TODAS LAS PERSONAS
 
+
+
 ?>
 
 <html>
@@ -80,6 +90,7 @@ if (isset($_POST['alta'])) {
 	<title>Banco</title>
 	<meta charset='UTF-8'>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	<script type="text/javascript" src='scripts/script.js'></script>
 	<link rel="stylesheet" type="text/css" href="css/estilos.css">
 </head>
 
@@ -118,30 +129,30 @@ if (isset($_POST['alta'])) {
 				</div>
 			</div>
 			<div class=" row mb-3">
-					<label for="email" class="col-sm-2 col-form-label">Email</label>
-					<div class="col-sm-10">
-						<input type="email" class="form-control" id="email" name="email" value="<?php echo $_SESSION['email'] ?? null ?>">
-					</div>
+				<label for="email" class="col-sm-2 col-form-label">Email</label>
+				<div class="col-sm-10">
+					<input type="email" class="form-control" id="email" name="email" value="<?php echo $_SESSION['email'] ?? null ?>">
 				</div>
-				<label class="col-sm-2 col-form-label"></label>
-				<button type="submit" class="btn btn-success" id='alta' name='alta'>Alta</button>
-				<button type="submit" class="btn btn-warning" id='modificacion' name='modificacion'>Modificación</button>
-				<button type="submit" class="btn btn-danger" id='baja' name='baja'>Baja</button>
-				<button type="reset" class="btn btn-success">Limpiar</button>
-				<label class="col-sm-2 col-form-label"></label>
-				<p class='mensajes'>
-					<?php
-					echo $mensaje;
-					echo $errores;
+			</div>
+			<label class="col-sm-2 col-form-label"></label>
+			<button type="submit" class="btn btn-success" id='alta' name='alta'>Alta</button>
+			<button type="submit" class="btn btn-warning" id='modificacion' name='modificacion'>Modificación</button>
+			<button type="submit" class="btn btn-danger" id='baja' name='baja'>Baja</button>
+			<button type="submit" class="btn btn-success" id='limpiar' name='limpiar'>Limpiar</button>
+			<label class="col-sm-2 col-form-label"></label>
+			<p class='mensajes'>
+				<?php
+				echo $mensaje;
+				echo $errores;
 
-					if (isset($_POST['alta'])) {
-						echo $mensajeExito ?? null;
-					}
+				if (isset($_POST['alta'])) {
+					echo $mensajeExito ?? null;
+				}
 
-					
 
-					?>
-				</p>
+
+				?>
+			</p>
 		</form><br><br>
 		<table id='listapersonas' class="table table-striped">
 
