@@ -28,11 +28,15 @@ if (isset($_POST['alta'])) {
 
 		// recupera los datos del formulario
 		$nif = filter_input(INPUT_POST, 'nif', FILTER_SANITIZE_ADD_SLASHES);
-		$nombre = filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_ADD_SLASHES);
-		$apellidos = filter_input(INPUT_POST, 'apellidos', FILTER_SANITIZE_ADD_SLASHES);
-		$direccion = filter_input(INPUT_POST, 'direccion', FILTER_SANITIZE_ADD_SLASHES);
-		$telefono = filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_ADD_SLASHES);
-		$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+		$nombre = trim(filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_ADD_SLASHES));
+		$apellidos = trim(filter_input(INPUT_POST, 'apellidos', FILTER_SANITIZE_ADD_SLASHES));
+		$direccion = trim(filter_input(INPUT_POST, 'direccion', FILTER_SANITIZE_ADD_SLASHES));
+		$telefono = trim(filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_ADD_SLASHES));
+		$email = trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL));
+
+		// convertir primera letra del nombre y apellidos en mayúsculas
+		$nombre = ucwords(strtolower($nombre));
+		$apellidos = ucwords(strtolower($apellidos));
 
 
 		// guardamos los datos de la sesión
