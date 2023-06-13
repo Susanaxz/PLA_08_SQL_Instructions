@@ -1,6 +1,7 @@
 <?php
 
 
+
 session_start();
 // session_unset();
 // session_destroy();
@@ -58,10 +59,8 @@ if (isset($_POST['alta'])) {
 		// limpiar datos de la sesión
 		session_unset();
 		session_destroy();
-
 	} catch (Exception $e) {
 		$errores .= $e->getMessage() . "<br>";
-		
 	}
 }
 
@@ -96,10 +95,10 @@ if (isset($_POST['modificacion'])) {
 		$apellidos = ucwords(strtolower($apellidos));
 
 		// dar de alta en la base de datos
-		modificacionPersona($conexionBanco, $nif, $nombre, $apellidos, $direccion, $telefono, $email);
+		$mensajeExito = modificacionPersona($conexionBanco, $nif, $nombre, $apellidos, $direccion, $telefono, $email);
 
-		$mensajeExito = "Modificación efectuada correctamente";
-		
+
+
 		// limpiar datos de la sesión
 		session_unset();
 		session_destroy();
@@ -109,6 +108,40 @@ if (isset($_POST['modificacion'])) {
 }
 
 //BAJA
+
+require_once 'funciones/baja.php';
+
+if (isset($_POST['baja'])) {
+	try {
+		$idpersona = filter_input(INPUT_POST, 'idpersona', FILTER_SANITIZE_NUMBER_INT);
+
+		if ($idpersona < 1 || !is_numeric($idpersona)) {
+			throw new Exception("El ID de la persona no es válido", 10);
+		}
+
+		// Verificar si la persona tiene cuentas asociadas
+		$sql = "SELECT COUNT(*) as cuenta FROM cuentas WHERE idpersona = $idpersona";
+		$resultado = mysqli_query($conexionBanco, $sql);
+		$row = mysqli_fetch_assoc($resultado);
+		$cuenta = $row['cuenta'];
+
+		if ($cuenta > 0) {
+			throw new Exception("Persona con cuentas asociadas no se puede borrar", 20);
+		}
+
+		// Baja de la persona en la base de datos
+		$mensajeExito = bajaPersona($conexionBanco, $idpersona);
+
+		// limpiar datos de la sesión
+		session_unset();
+		session_destroy();
+	} catch (Exception $e) {
+		$errores .= $e->getMessage() . "<br>";
+	}
+}
+
+
+
 
 //CONSULTA DE UNA PERSONA DE LA TABLA
 
@@ -211,7 +244,7 @@ if ($objetoDatos->num_rows == 0) {
 				echo $mensaje;
 				echo $errores;
 				echo $mensajeExito ?? null;
-				
+
 
 				if (isset($_POST['alta'])) {
 					echo $mensajeExito ?? null;
@@ -243,6 +276,10 @@ if ($objetoDatos->num_rows == 0) {
 	</div>
 	<form id='formconsulta' method='post' action='#'>
 		<input type='hidden' id='consulta' name='consulta'>
+	</form>
+	
+
+
 	</form>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 	<script type="text/javascript" src='scripts/script.js'></script>
