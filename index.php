@@ -1,4 +1,6 @@
 <?php
+
+
 session_start();
 // session_unset();
 // session_destroy();
@@ -56,8 +58,10 @@ if (isset($_POST['alta'])) {
 		// limpiar datos de la sesión
 		session_unset();
 		session_destroy();
+
 	} catch (Exception $e) {
 		$errores .= $e->getMessage() . "<br>";
+		
 	}
 }
 
@@ -74,11 +78,73 @@ if (isset($_POST['limpiar'])) {
 
 //MODIFICACION
 
+require_once 'funciones/modificacion.php';
+
+
+if (isset($_POST['modificacion'])) {
+	try {
+		// recupera los datos del formulario
+		$nif = filter_input(INPUT_POST, 'nif', FILTER_SANITIZE_ADD_SLASHES);
+		$nombre = trim(filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_ADD_SLASHES));
+		$apellidos = trim(filter_input(INPUT_POST, 'apellidos', FILTER_SANITIZE_ADD_SLASHES));
+		$direccion = trim(filter_input(INPUT_POST, 'direccion', FILTER_SANITIZE_ADD_SLASHES));
+		$telefono = trim(filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_ADD_SLASHES));
+		$email = trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL));
+
+		// convertir primera letra del nombre y apellidos en mayúsculas
+		$nombre = ucwords(strtolower($nombre));
+		$apellidos = ucwords(strtolower($apellidos));
+
+		// dar de alta en la base de datos
+		modificacionPersona($conexionBanco, $nif, $nombre, $apellidos, $direccion, $telefono, $email);
+
+		$mensajeExito = "Modificación efectuada correctamente";
+		
+		// limpiar datos de la sesión
+		session_unset();
+		session_destroy();
+	} catch (Exception $e) {
+		$errores .= $e->getMessage() . "<br>";
+	}
+}
+
 //BAJA
 
 //CONSULTA DE UNA PERSONA DE LA TABLA
 
+if (isset($_POST['consulta'])) {
+	$idpersona = $_POST['consulta'];
+
+	$sql = "SELECT * FROM personas WHERE idpersona = " . $idpersona;
+	$objetoDatos = mysqli_query($conexionBanco, $sql);
+	$persona = mysqli_fetch_assoc($objetoDatos);
+
+	if ($persona) {
+		$_SESSION['nif'] = $persona['nif'];
+		$_SESSION['nombre'] = $persona['nombre'];
+		$_SESSION['apellidos'] = $persona['apellidos'];
+		$_SESSION['direccion'] = $persona['direccion'];
+		$_SESSION['telefono'] = $persona['telefono'];
+		$_SESSION['email'] = $persona['email'];
+	} else {
+		$errores .= "No se pudo encontrar una persona con el ID proporcionado.<br>";
+	}
+}
+
 //CONSULTA DE TODAS LAS PERSONAS
+
+// Confeccionar la sentencia SELECT
+$sql = "SELECT * FROM personas ORDER BY nombre, apellidos";
+$objetoDatos = mysqli_query($conexionBanco, $sql);
+
+// Comprobar si la consulta devuelve datos
+if ($objetoDatos->num_rows == 0) {
+	echo "No se encontraron personas.";
+} else {
+	// Extraer los datos en un array asociativo
+	$personas = mysqli_fetch_all($objetoDatos, MYSQLI_ASSOC);
+}
+
 
 
 
@@ -144,6 +210,8 @@ if (isset($_POST['limpiar'])) {
 				<?php
 				echo $mensaje;
 				echo $errores;
+				echo $mensajeExito ?? null;
+				
 
 				if (isset($_POST['alta'])) {
 					echo $mensajeExito ?? null;
@@ -155,6 +223,21 @@ if (isset($_POST['limpiar'])) {
 			</p>
 		</form><br><br>
 		<table id='listapersonas' class="table table-striped">
+			<?php
+			if (isset($personas)) {
+				echo "<tr><th>NIF</th><th>Nombre</th><th>Apellidos</th><th>Dirección</th><th>Teléfono</th><th>Email</th></tr>";
+				foreach ($personas as $persona) {
+					echo "<tr data-id='" . $persona['idpersona'] . "' onclick='consultaPersona(" . $persona['idpersona'] . ")'>
+					<td>" . $persona['nif'] . "</td>
+					<td>" . $persona['nombre'] . "</td>
+					<td>" . $persona['apellidos'] . "</td>
+					<td>" . $persona['direccion'] . "</td>
+					<td>" . $persona['telefono'] . "</td>
+					<td>" . $persona['email'] . "</td>
+					</tr>";
+				}
+			}
+			?>
 
 		</table>
 	</div>
