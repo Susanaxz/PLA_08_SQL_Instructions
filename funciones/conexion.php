@@ -17,4 +17,6 @@ function conectar()
     // Devuelve la conexión
     return $conexionBanco;
 }
+
+
 ?>

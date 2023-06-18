@@ -9,16 +9,18 @@ session_start();
 
 require_once 'funciones/conexion.php';
 require_once 'funciones/alta.php';
+require_once 'funciones/modificacion.php';
 
 $conexionBanco = conectar();
 
 // inicializar variables
-$nif = $_POST['nif'] ?? '';
-$nombre = $_POST['nombre'] ?? '';
-$apellidos = $_POST['apellidos'] ?? '';
-$direccion = $_POST['direccion'] ?? '';
-$telefono = $_POST['telefono'] ?? '';
-$email = $_POST['email'] ?? '';
+$nif = $_POST['nif'] ?? null;
+$nombre = $_POST['nombre'] ?? null;
+$apellidos = $_POST['apellidos'] ?? null;
+$direccion = $_POST['direccion'] ?? null;
+$telefono = $_POST['telefono'] ?? null;
+$email = $_POST['email'] ?? null;
+$idpersonaBaja = $_POST['idpersonaBaja'] ?? null;
 
 
 // inicializar mensaje y errores
@@ -109,37 +111,38 @@ if (isset($_POST['modificacion'])) {
 
 //BAJA
 
-require_once 'funciones/baja.php';
-
 if (isset($_POST['baja'])) {
-	try {
-		$idpersona = filter_input(INPUT_POST, 'idpersona', FILTER_SANITIZE_NUMBER_INT);
+	$idpersona = $_POST['idpersonaBaja'] ?? '';
 
-		if ($idpersona < 1 || !is_numeric($idpersona)) {
-			throw new Exception("El ID de la persona no es válido", 10);
+	if (empty($idpersona)) {
+		echo "No se proporcionó ningún ID de persona para la baja.";
+	} else {
+		$sql = "SELECT * FROM cuentas WHERE idpersona = ?";
+		$stmt = $conexionBanco->prepare($sql);
+		$stmt->bind_param("i", $idpersona);
+		$stmt->execute();
+		$cuenta = $stmt->get_result()->fetch_assoc();
+		$stmt->close();
+
+		echo "ID de persona a eliminar: " . $idpersona . "<br>";
+
+		if ($cuenta) {
+			echo "La persona tiene cuentas asociadas. No se puede eliminar.";
+		} else {
+			$sql = "DELETE FROM personas WHERE idpersona = ?";
+			$stmt = $conexionBanco->prepare($sql);
+			$stmt->bind_param("i", $idpersona);
+			$stmt->execute();
+			$stmt->close();
+
+			if ($conexionBanco->affected_rows > 0) {
+				echo "La persona ha sido eliminada exitosamente.";
+			} else {
+				echo "No se encontró una persona con el ID proporcionado.";
+			}
 		}
-
-		// Verificar si la persona tiene cuentas asociadas
-		$sql = "SELECT COUNT(*) as cuenta FROM cuentas WHERE idpersona = $idpersona";
-		$resultado = mysqli_query($conexionBanco, $sql);
-		$row = mysqli_fetch_assoc($resultado);
-		$cuenta = $row['cuenta'];
-
-		if ($cuenta > 0) {
-			throw new Exception("Persona con cuentas asociadas no se puede borrar", 20);
-		}
-
-		// Baja de la persona en la base de datos
-		$mensajeExito = bajaPersona($conexionBanco, $idpersona);
-
-		// limpiar datos de la sesión
-		session_unset();
-		session_destroy();
-	} catch (Exception $e) {
-		$errores .= $e->getMessage() . "<br>";
 	}
 }
-
 
 
 
@@ -159,6 +162,7 @@ if (isset($_POST['consulta'])) {
 		$_SESSION['direccion'] = $persona['direccion'];
 		$_SESSION['telefono'] = $persona['telefono'];
 		$_SESSION['email'] = $persona['email'];
+		$_SESSION['idpersona'] = $idpersona;
 	} else {
 		$errores .= "No se pudo encontrar una persona con el ID proporcionado.<br>";
 	}
@@ -196,7 +200,8 @@ if ($objetoDatos->num_rows == 0) {
 <body>
 	<div class='container'>
 		<form id='formulario' method='post' action='#'>
-			<input type='hidden' id='idpersona' name='idpersona'>
+			<input type="hidden" name="idpersonaBaja" value="<?php echo $idpersona; ?>">
+
 			<div class="row mb-3">
 				<label for="nif" class="col-sm-2 col-form-label">NIF</label>
 				<div class="col-sm-10">
@@ -236,7 +241,7 @@ if ($objetoDatos->num_rows == 0) {
 			<label class="col-sm-2 col-form-label"></label>
 			<button type="submit" class="btn btn-success" id='alta' name='alta'>Alta</button>
 			<button type="submit" class="btn btn-warning" id='modificacion' name='modificacion'>Modificación</button>
-			<button type="submit" class="btn btn-danger" id='baja' name='baja'>Baja</button>
+			<button type="submit" class="btn btn-danger" id="baja" name="baja">Baja</button>
 			<button type="submit" class="btn btn-success" id='limpiar' name='limpiar'>Limpiar</button>
 			<label class="col-sm-2 col-form-label"></label>
 			<p class='mensajes'>
@@ -244,6 +249,9 @@ if ($objetoDatos->num_rows == 0) {
 				echo $mensaje;
 				echo $errores;
 				echo $mensajeExito ?? null;
+
+				echo "ID de persona a eliminar: " . $idpersona . "<br>";
+				echo "ID de personaBaja: " . $idpersonaBaja . "<br>";
 
 
 				if (isset($_POST['alta'])) {
@@ -256,6 +264,7 @@ if ($objetoDatos->num_rows == 0) {
 			</p>
 		</form><br><br>
 		<table id='listapersonas' class="table table-striped">
+
 			<?php
 			if (isset($personas)) {
 				echo "<tr><th>NIF</th><th>Nombre</th><th>Apellidos</th><th>Dirección</th><th>Teléfono</th><th>Email</th></tr>";
@@ -270,14 +279,21 @@ if ($objetoDatos->num_rows == 0) {
 					</tr>";
 				}
 			}
+			// //imprimir el array de forma ordenada
+			// echo "<pre>";
+			// print_r($personas);
+
 			?>
 
 		</table>
 	</div>
+
 	<form id='formconsulta' method='post' action='#'>
 		<input type='hidden' id='consulta' name='consulta'>
+		<input type='hidden' id='idpersonaFormulario' name='idpersonaFormulario' value="<?php echo $_SESSION['idpersona'] ?? ''; ?>">
+		<input type='hidden' id='idpersonaConsulta' name='idpersonaConsulta' value="<?php echo $idpersona; ?>">
+		<input type="hidden" name="idpersonaBaja" value="<?php echo $_SESSION['idpersona'] ?? ''; ?>">
 	</form>
-	
 
 
 	</form>

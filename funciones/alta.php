@@ -1,8 +1,7 @@
 <?php
 require_once 'conexion.php';
 
-function altaPersona($nif, $nombre, $apellidos, $direccion, $telefono, $email)
-{
+function altaPersona($nif, $nombre, $apellidos, $direccion, $telefono, $email){
     global $conexionBanco;
 
     // VALIDAR DATOS OBLIGATORIOS
@@ -54,11 +53,23 @@ function altaPersona($nif, $nombre, $apellidos, $direccion, $telefono, $email)
 
     if (!mysqli_query($conexionBanco, $sql)) {
         if ($conexionBanco->errno == 1062) {
-            throw new Exception("El nif o email ya existen en la base de datos");
+            // Recupero el texto del error que nos entrega el SGBD
+            $errores = $conexionBanco->error;
+
+            // Busco cual de las dos claves (nif o email) se encuentra dentro del texto
+            if (stripos($errores, 'nif') !== false) {
+                $clave = 'NIF';
+            } else {
+                $clave = 'email';
+            }
+
+            // Confecciona el mensaje de error de forma dinámica
+            $errores .= "No pueden existir dos personas con el mismo $clave. <br>";
+            // lanzamos la excepción.
+            throw new Exception($errores);
         }
         //texto del error, código de error
         throw new Exception($conexionBanco->error, $conexionBanco->errno);
-    
     }
 }
 
