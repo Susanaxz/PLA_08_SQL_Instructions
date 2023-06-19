@@ -68,13 +68,11 @@ if (isset($_POST['alta'])) {
 	}
 }
 
+// LIMPIAR 
+require_once 'funciones/limpiar.php';
+
 if (isset($_POST['limpiar'])) {
-	$_SESSION['nif'] = null;
-	$_SESSION['nombre'] = null;
-	$_SESSION['apellidos'] = null;
-	$_SESSION['direccion'] = null;
-	$_SESSION['telefono'] = null;
-	$_SESSION['email'] = null;
+	limpiarFormulario();
 }
 
 
@@ -100,8 +98,6 @@ if (isset($_POST['modificacion'])) {
 
 		// dar de alta en la base de datos
 		$mensajeExito = modificacionPersona($conexionBanco, $nif, $nombre, $apellidos, $direccion, $telefono, $email);
-
-
 
 		// limpiar datos de la sesión
 		session_unset();
@@ -216,17 +212,14 @@ if ($objetoDatos->num_rows == 0) {
 			<button type="submit" class="btn btn-danger" id="baja" name="baja">Baja</button>
 			<button type="submit" class="btn btn-success" id='limpiar' name='limpiar'>Limpiar</button>
 			<label class="col-sm-2 col-form-label"></label>
-			
+
 			<p class='mensajes'>
 				<?php
 				echo $mensaje;
 				echo $errores;
 				echo $mensajeExito ?? null;
-
-				if (isset($_POST['alta'])) {
-					echo $mensajeExito ?? null;
-				}
-
+				?>
+				<?php
 				if (isset($_POST['baja'])) {
 					$idpersona = $_POST['idpersonaBaja'] ?? '';
 
@@ -254,14 +247,13 @@ if ($objetoDatos->num_rows == 0) {
 
 							if ($filasAfectadas > 0) {
 								echo "La persona ha sido eliminada exitosamente.";
+								
 							} else {
 								echo "No se encontró una persona con el ID proporcionado.";
 							}
 						}
 					}
 				}
-
-
 
 				?>
 			</p>
