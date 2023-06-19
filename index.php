@@ -21,6 +21,8 @@ $direccion = $_POST['direccion'] ?? null;
 $telefono = $_POST['telefono'] ?? null;
 $email = $_POST['email'] ?? null;
 $idpersonaBaja = $_POST['idpersonaBaja'] ?? null;
+$idpersona = $_POST['idpersona'] ?? '';
+
 
 
 // inicializar mensaje y errores
@@ -111,38 +113,7 @@ if (isset($_POST['modificacion'])) {
 
 //BAJA
 
-if (isset($_POST['baja'])) {
-	$idpersona = $_POST['idpersonaBaja'] ?? '';
 
-	if (empty($idpersona)) {
-		echo "No se proporcionó ningún ID de persona para la baja.";
-	} else {
-		$sql = "SELECT * FROM cuentas WHERE idpersona = ?";
-		$stmt = $conexionBanco->prepare($sql);
-		$stmt->bind_param("i", $idpersona);
-		$stmt->execute();
-		$cuenta = $stmt->get_result()->fetch_assoc();
-		$stmt->close();
-
-		echo "ID de persona a eliminar: " . $idpersona . "<br>";
-
-		if ($cuenta) {
-			echo "La persona tiene cuentas asociadas. No se puede eliminar.";
-		} else {
-			$sql = "DELETE FROM personas WHERE idpersona = ?";
-			$stmt = $conexionBanco->prepare($sql);
-			$stmt->bind_param("i", $idpersona);
-			$stmt->execute();
-			$stmt->close();
-
-			if ($conexionBanco->affected_rows > 0) {
-				echo "La persona ha sido eliminada exitosamente.";
-			} else {
-				echo "No se encontró una persona con el ID proporcionado.";
-			}
-		}
-	}
-}
 
 
 
@@ -200,6 +171,7 @@ if ($objetoDatos->num_rows == 0) {
 <body>
 	<div class='container'>
 		<form id='formulario' method='post' action='#'>
+			<input type='hidden' name='idpersonaBaja' value='<?php echo $_SESSION['idpersona'] ?? null; ?>'>
 			<input type="hidden" name="idpersonaBaja" value="<?php echo $idpersona; ?>">
 
 			<div class="row mb-3">
@@ -244,18 +216,49 @@ if ($objetoDatos->num_rows == 0) {
 			<button type="submit" class="btn btn-danger" id="baja" name="baja">Baja</button>
 			<button type="submit" class="btn btn-success" id='limpiar' name='limpiar'>Limpiar</button>
 			<label class="col-sm-2 col-form-label"></label>
+			
 			<p class='mensajes'>
 				<?php
 				echo $mensaje;
 				echo $errores;
 				echo $mensajeExito ?? null;
 
-				echo "ID de persona a eliminar: " . $idpersona . "<br>";
-				echo "ID de personaBaja: " . $idpersonaBaja . "<br>";
-
-
 				if (isset($_POST['alta'])) {
 					echo $mensajeExito ?? null;
+				}
+
+				if (isset($_POST['baja'])) {
+					$idpersona = $_POST['idpersonaBaja'] ?? '';
+
+					if (empty($idpersona)) {
+						echo "No se proporcionó ningún ID de persona para la baja.";
+					} else {
+						$sql = "SELECT * FROM cuentas WHERE idpersona = ?";
+						$stmt = $conexionBanco->prepare($sql);
+						$stmt->bind_param("i", $idpersona);
+						$stmt->execute();
+						$cuenta = $stmt->get_result()->fetch_assoc();
+						$stmt->close();
+
+						echo "ID de persona a eliminar: " . $idpersona . "<br>";
+
+						if ($cuenta) {
+							echo "La persona tiene cuentas asociadas. No se puede eliminar.";
+						} else {
+							$sql = "DELETE FROM personas WHERE idpersona = ?";
+							$stmt = $conexionBanco->prepare($sql);
+							$stmt->bind_param("i", $idpersona);
+							$stmt->execute();
+							$filasAfectadas = $stmt->affected_rows;
+							$stmt->close();
+
+							if ($filasAfectadas > 0) {
+								echo "La persona ha sido eliminada exitosamente.";
+							} else {
+								echo "No se encontró una persona con el ID proporcionado.";
+							}
+						}
+					}
 				}
 
 
